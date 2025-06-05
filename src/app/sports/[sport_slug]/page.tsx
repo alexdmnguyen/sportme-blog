@@ -1,135 +1,15 @@
+// Single Sport Pages
+
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata, ResolvingMetadata } from 'next';
-
-// --- INTERFACES ---
-interface StrapiMediaFormat { url: string; width?: number; height?: number; /* ... */ }
-interface DirectStrapiMediaObject {
-  id: number;
-  url: string;
-  alternativeText?: string | null;
-  width?: number;
-  height?: number;
-  formats?: { [key: string]: StrapiMediaFormat };
-}
-
-interface StrapiRelatedCategoryForArticle { 
-  id: number;
-  name: string;
-  slug: string;
-}
-
-interface StrapiArticleListItem {
-  id: number;
-  title: string;
-  slug: string | null;
-  excerpt?: string | null;
-  publishedAt?: string | null;
-  cover_image?: DirectStrapiMediaObject | null;
-  categories?: { data?: StrapiRelatedCategoryForArticle[] };
-}
-
-interface StrapiSportDetails {
-  id: number;
-  name: string;
-  slug: string;
-  description?: string;
-  sport_image?: DirectStrapiMediaObject | null;
-}
-
-interface SportPageData {
-  sport: StrapiSportDetails | null;
-  articles: StrapiArticleListItem[];
-}
-
-// --- DATA FETCHING FUNCTION ---
-async function getSportDetailsAndArticles(sportSlug: string): Promise<SportPageData> {
-  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_API_URL;
-  const strapiToken = process.env.NEXT_PUBLIC_STRAPI_TOKEN;
-  let sportData: StrapiSportDetails | null = null;
-  let articlesData: StrapiArticleListItem[] = [];
-
-  if (!strapiUrl) {
-    console.error("Strapi URL is not defined (getSportDetailsAndArticles).");
-    return { sport: null, articles: [] };
-  }
-
-  console.log(`DEBUG (Server Console) - getSportDetailsAndArticles received sportSlug: "${sportSlug}"`);
-
-  try {
-    // 1. Fetch Sport Details
-    const populateSportImageParams = [
-      'populate[sport_image][fields][0]=name',
-      'populate[sport_image][fields][1]=alternativeText',
-      'populate[sport_image][fields][2]=url',
-      'populate[sport_image][fields][3]=width',
-      'populate[sport_image][fields][4]=height',
-      'populate[sport_image][fields][5]=formats'
-    ].join('&');
-    
-    const sportEndpoint = `${strapiUrl}/sports?filters[slug][$eq]=${sportSlug}&${populateSportImageParams}`;
-    console.log(`DEBUG (Server Console) - Fetching Sport Details from: ${sportEndpoint}`);
-    
-    const sportRes = await fetch(sportEndpoint, { headers: { ...(strapiToken && { Authorization: `Bearer ${strapiToken}` }) }, cache: 'no-store' });
-    const sportResText = await sportRes.text(); // Get text for debugging
-
-    if (sportRes.ok) {
-      const sportJsonResponse = JSON.parse(sportResText);
-      // *** DEBUGGING: Log the response for sport details ***
-      console.log(`DEBUG (Server Console) - Sport Details JSON Response for slug "${sportSlug}":`, JSON.stringify(sportJsonResponse, null, 2));
-
-      if (sportJsonResponse && Array.isArray(sportJsonResponse.data) && sportJsonResponse.data.length > 0) {
-        sportData = sportJsonResponse.data[0] as StrapiSportDetails; 
-      } else {
-        console.warn(`DEBUG (Server Console) - No sport found for slug "${sportSlug}" in sportJsonResponse.data`);
-      }
-    } else {
-      console.error(`DEBUG: Failed to fetch sport details for ${sportSlug}:`, sportRes.status, sportResText);
-    }
-
-    if (sportData) {
-      const articlesPopulate = [
-        'populate[cover_image][fields][0]=url',
-        'populate[cover_image][fields][1]=alternativeText',
-        'populate[cover_image][fields][2]=width',
-        'populate[cover_image][fields][3]=height',
-        // 'populate[cover_image][fields][4]=formats',
-        
-        'populate[categories][fields][0]=name',
-        'populate[categories][fields][1]=slug'
-      ].join('&');
-      
-      const articlesEndpoint = `${strapiUrl}/articles?filters[sport][slug][$eq]=${sportSlug}&${articlesPopulate}&sort[0]=publishedAt:desc`;
-      console.log(`DEBUG (Server Console) - Fetching Articles for Sport "${sportSlug}" from: ${articlesEndpoint}`);
-
-      const articlesRes = await fetch(articlesEndpoint, { headers: { ...(strapiToken && { Authorization: `Bearer ${strapiToken}` }) }, cache: 'no-store' });
-      const articlesResText = await articlesRes.text(); // Get text for debugging
-
-      if (articlesRes.ok) {
-        const articlesJsonResponse = JSON.parse(articlesResText);
-        // *** DEBUGGING: Log the response for articles list ***
-        console.log(`DEBUG (Server Console) - Articles for Sport "${sportSlug}" JSON Response:`, JSON.stringify(articlesJsonResponse, null, 2));
-
-        if (articlesJsonResponse && Array.isArray(articlesJsonResponse.data)) {
-          articlesData = articlesJsonResponse.data.filter(
-            (item: any) => item && typeof item.title !== 'undefined' && item.slug
-          ) as StrapiArticleListItem[];
-        } else {
-            console.warn(`DEBUG (Server Console) - No articles found for sport "${sportSlug}" or data format unexpected in articlesJsonResponse.data`);
-        }
-      } else {
-        console.error(`DEBUG: Failed to fetch articles for sport ${sportSlug} (articlesRes not OK):`, articlesRes.status, articlesResText);
-      }
-    } else {
-        console.warn(`DEBUG (Server Console) - Skipping fetching articles because sportData for slug "${sportSlug}" was not found or is null.`);
-    }
-    
-  } catch (error: any) {
-    console.error(`DEBUG: Error in getSportDetailsAndArticles for ${sportSlug} (outer catch block):`, error.message, error.stack);
-  }
-  
-  return { sport: sportData, articles: articlesData };
-}
+import { getArticlesBySportSlug, getStrapiImageUrl } from '@/lib/strapi-client';
+import { 
+  StrapiSportPageData,
+  StrapiArticleListItem,
+  StrapiRelatedItem,
+  DirectStrapiMediaObject
+} from '@/lib/strapi-types';
 
 // --- PROPS INTERFACE ---
 interface SportPageProps {
@@ -143,118 +23,119 @@ export async function generateMetadata(
   { params }: SportPageProps,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const { sport } = await getSportDetailsAndArticles(params.sport_slug);
+  const { sport } = await getArticlesBySportSlug(params.sport_slug);
   if (!sport) {
     return { title: 'Sport Not Found' };
   }
   return {
-    title: `${sport.name} Articles | SportsBlogPro`,
+    title: `${sport.name} Articles | SamboBlog`,
     description: sport.description || `Latest articles and news about ${sport.name}.`,
+    // openGraph: { images: [getStrapiImageUrl(sport.sport_image) || ''] }
   };
 }
 
 // --- PAGE COMPONENT ---
+export const revalidate = 60; // Revalidate this page every 60 seconds
 
 export default async function SportPage({ params }: SportPageProps) {
-  const { sport, articles } = await getSportDetailsAndArticles(params.sport_slug);
-  const strapiBaseUrl = process.env.NEXT_PUBLIC_STRAPI_BASE_URL || '';
+  const { sport, articles }: StrapiSportPageData = await getArticlesBySportSlug(params.sport_slug);
 
   if (!sport) {
-    notFound(); // Triggers 404 page
+    notFound();
   }
 
-  const sportImageUrlFromAPI = sport.sport_image?.url;
-  const fullSportImageUrl = sportImageUrlFromAPI
-    ? (sportImageUrlFromAPI.startsWith('/') ? `${strapiBaseUrl}${sportImageUrlFromAPI}` : sportImageUrlFromAPI)
-    : null;
+  const fullSportImageUrl = getStrapiImageUrl(sport.sport_image);
 
   return (
     <main>
       {/* --- Full-Width Hero/Cover Section --- */}
-      <section className="relative w-full h-60 md:h-65 lg:h-70 bg-gray-800 text-white overflow-hidden">
+      <section className="relative w-full h-72 md:h-80 lg:h-96 bg-slate-800 text-white overflow-hidden">
         {fullSportImageUrl ? (
           <img 
             src={fullSportImageUrl} 
             alt={sport.sport_image?.alternativeText || sport.name}
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-in-out hover:scale-110" 
-            width={sport.sport_image?.width}
-            height={sport.sport_image?.height}
+            width={sport.sport_image?.width} // Optional: for layout stability
+            height={sport.sport_image?.height} // Optional: for layout stability
           />
         ) : (
-          // Fallback solid color if no image
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900 to-slate-700"></div>
         )}
-
-        <div className="absolute inset-0 bg-black/75"></div>
-
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/50 to-transparent"></div>
         <div className="relative h-full flex flex-col justify-center items-center text-center p-4">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight drop-shadow-lg">{sport.name}</h1>
           {sport.description && (
-            <p className="mt-4 text-lg sm:text-xl max-w-2xl text-gray-200 drop-shadow-md">{sport.description}</p>
+            <p className="mt-4 text-lg sm:text-xl max-w-2xl text-slate-200 drop-shadow-md">{sport.description}</p>
           )}
         </div>
       </section>
 
       {/* --- Articles List Section (with container for standard width) --- */}
-      <div className="relative z-10 container mx-auto px-4 py-8 sm:px-6 lg:px-8 mt-[-4rem] sm:mt-[-5rem]">
+      <div className="relative z-10 container mx-auto px-4 py-8 sm:px-6 lg:px-8 mt-[-4rem] sm:mt-[-5rem] mb-12">
         {articles.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-25 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto"> {/* Max 2 columns, centered */}
             {articles.map((article) => {
-              // Construct the article's cover image URL
-              const articleCoverImageUrlFromAPI = article.cover_image?.url;
-              const fullArticleCoverUrl = articleCoverImageUrlFromAPI
-                ? (articleCoverImageUrlFromAPI.startsWith('/') ? `${strapiBaseUrl}${articleCoverImageUrlFromAPI}` : articleCoverImageUrlFromAPI)
-                : null;
-              
-              const sportInfo = article.sport?.data;
+              const fullArticleCoverUrl = getStrapiImageUrl(article.cover_image);
+              // const categoryInfo = article.categories?.[0];
 
-                return (
-                    <div key={article.id} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out flex flex-col overflow-hidden">
-                    
-                    <div className="p-6 flex flex-col flex-grow">
-                        <h2 className="text-xl font-bold mb-2 text-slate-900 dark:text-slate-100">
-                        <Link href={`/articles/${article.slug}`} className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                            {article.title || 'Untitled Article'}
-                        </Link>
-                        </h2>
-                        
-                        {article.publishedAt && (
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
-                            {new Date(article.publishedAt).toLocaleDateString()}
-                        </p>
-                        )}
-
-                        {article.excerpt && <p className="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow">{article.excerpt}</p>}
-                        
-                        {!article.excerpt && <div className="flex-grow"></div>} 
-                        
-                        <div className="mt-auto">
+              return (
+                <div key={article.id} className="bg-white dark:bg-slate-800 rounded-lg shadow-xl hover:shadow-2xl dark:border dark:border-slate-700 transition-all duration-300 ease-in-out flex flex-col overflow-hidden transform hover:-translate-y-1">
+                  {/* Text Content First */}
+                  <div className="p-6 flex flex-col flex-grow">
+                    <h2 className="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">
+                      <Link href={`/articles/${article.slug}`} className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                        {article.title || 'Untitled Article'}
+                      </Link>
+                    </h2>
+                     {/* Display Categories if available 
+                     {article.categories && article.categories.length > 0 && (
+                       <div className="flex flex-wrap gap-2 mb-2">
+                         {article.categories.map(cat => (
+                           <Link key={cat.id} href={`/categories/${cat.slug}`} className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600">
+                             {cat.name}
+                           </Link>
+                         ))}
+                       </div>
+                     )}*/}
+                    {article.publishedAt && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                        Published: {new Date(article.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                      </p>
+                    )}
+                    {article.excerpt && (
+                      <p className="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow line-clamp-3">
+                        {article.excerpt}
+                      </p>
+                    )}
+                    {!article.excerpt && <div className="flex-grow min-h-[3em]"></div>}
+                    <div className="mt-auto pt-2">
+                      {article.slug ? (
                         <Link href={`/articles/${article.slug}`} className="inline-block text-indigo-600 dark:text-indigo-400 font-semibold hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors">
                             Read more &rarr;
                         </Link>
-                        </div>
+                      ) : (
+                        <p className="text-sm text-red-500">Article slug missing.</p>
+                      )}
                     </div>
-
-                    {fullArticleCoverUrl && (
-                        <Link href={`/articles/${article.slug}`} className="block relative">
-                        {/* The overflow-hidden on the parent will clip the bottom corners of this image */}
-                        <img 
-                            src={fullArticleCoverUrl} 
-                            alt={article.cover_image?.alternativeText || article.title}
-                            className="w-full h-56 object-cover transition-transform duration-300 group-hover:scale-105" // Note: group-hover might be needed if hover is on parent
-                            width={article.cover_image?.width || 400}
-                            height={article.cover_image?.height || 225}
-                        />
-                        </Link>
-                    )}
-                    </div>
-                );
+                  </div>
+                  {/* Image Last */}
+                  {fullArticleCoverUrl && (
+                     <Link href={`/articles/${article.slug}`} className="block relative aspect-video overflow-hidden"> {/* aspect-video maintains 16:9 */}
+                      <img 
+                        src={fullArticleCoverUrl} 
+                        alt={article.cover_image?.alternativeText || article.title || ''}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </Link>
+                  )}
+                </div>
+              );
             })}
           </div>
         ) : (
-          <div className="text-center py-16 bg-white rounded-lg shadow-lg">
-            <h2 className="text-2xl font-semibold text-gray-800">No Articles Yet</h2>
-            <p className="mt-2 text-gray-600">Check back soon for articles about {sport.name}!</p>
+          <div className="text-center py-16 bg-white dark:bg-slate-800 rounded-lg shadow-lg">
+            <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-200">No Articles Yet</h2>
+            <p className="mt-2 text-slate-600 dark:text-slate-400">Check back soon for articles about {sport.name}!</p>
           </div>
         )}
       </div>
@@ -262,15 +143,10 @@ export default async function SportPage({ params }: SportPageProps) {
   );
 }
 
-// For pre-rendering paths at build time
+// Optional: For pre-rendering paths at build time
 // export async function generateStaticParams() {
-//   const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_API_URL;
-//   if (!strapiUrl) return [];
-//   const res = await fetch(`${strapiUrl}/sports?fields[0]=slug`); // Only fetch slugs
-//   if (!res.ok) return [];
-//   const sportsResponse = await res.json();
-//   if (!sportsResponse || !Array.isArray(sportsResponse.data)) return [];
-//   return sportsResponse.data.map((sport: { slug: string }) => ({
+//   const sports = await getSportsFromStrapi(); // Assuming getSportsFromStrapi exists in strapi-client
+//   return sports.map((sport) => ({
 //     sport_slug: sport.slug,
 //   }));
 // }

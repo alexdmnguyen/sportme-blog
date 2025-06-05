@@ -1,4 +1,4 @@
-// Home Page
+// eSports HUB
 
 import Link from 'next/link';
 import { 
@@ -13,40 +13,38 @@ import {
   StrapiArticleListItem 
 } from '@/lib/strapi-types';
 
-// Revalidate page's data every 60 seconds.
-export const revalidate = 60;
+export const revalidate = 60; // Revalidate page's data every 60 seconds
 
-// --- HOMEPAGE COMPONENT ---
-export default async function HomePage() {
-  const sportsFromStrapi: StrapiSportListItem[] = await getSportsFromStrapi({ is_esport: false });
-  const categoriesFromStrapi: StrapiCategoryListItem[] = await getCategoriesFromStrapi();
-  const articles: StrapiArticleListItem[] = await getLatestArticles(5, { is_esport: false }); // Fetch latest 5 articles
+// --- ESPORTS HOMEPAGE COMPONENT ---
+export default async function EsportsHomePage() {
+  // Fetch ONLY esports
+  const esportsSports: StrapiSportListItem[] = await getSportsFromStrapi({ is_esport: true });
+  // Fetch all categories for now - can be filtered later if needed
+  const categoriesFromStrapi: StrapiCategoryListItem[] = await getCategoriesFromStrapi(); 
+  // Fetch latest articles that BELONG to an esport
+  const esportsArticles: StrapiArticleListItem[] = await getLatestArticles(5, { is_esport: true }); 
 
   return (
     <main className="container mx-auto px-4 py-8 sm:px-6 lg:py-12">
       
-      {/* --- Hero/Welcome Section --- */}
       <section className="text-center mb-16">
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-4 text-slate-900 dark:text-slate-100 tracking-tight">Welcome to SAMBO SENTRAL!</h1>
-        <p className="max-w-2xl mx-auto text-lg text-slate-600 dark:text-slate-400">Your one-stop source for the latest news, rumors, and predictions.</p>
-        <div className="mt-8">
-          <Link href="/articles" className="inline-block bg-indigo-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors shadow-md hover:shadow-lg">
-            View All Articles
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-4 text-slate-900 dark:text-slate-100 tracking-tight">Welcome to the Esports Hub!</h1>
+        <p className="max-w-2xl mx-auto text-lg text-slate-600 dark:text-slate-400">Your central source for all things esports: news, tournaments, and analysis.</p>
+        {/* Optional: Link to all esports articles if you create such a page */}
+        {/* <div className="mt-8">
+          <Link href="/esports/articles" className="inline-block bg-indigo-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors shadow-md hover:shadow-lg">
+            All Esports Articles
           </Link>
-        </div>
+        </div> */}
       </section>
       
-      {/* --- Explore Sports Section --- */}
+      {/* --- Explore Esports Titles Section --- */}
       <section className="w-full mb-16">
-        <h2 className="text-3xl font-bold mb-8 text-center text-slate-800 dark:text-slate-200">Explore Sports</h2>
-        {sportsFromStrapi.length > 0 ? (
+        <h2 className="text-3xl font-bold mb-8 text-center text-slate-800 dark:text-slate-200">Featured Esports</h2>
+        {esportsSports.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {sportsFromStrapi.map((sport) => {
+            {esportsSports.map((sport) => {
               const fullSportImageUrl = getStrapiImageUrl(sport.sport_image);
-              // console.log(`DEBUG (Browser Console) - Sport: ${sport.name}`);
-              // console.log(`DEBUG (Browser Console) - sport.sport_image object:`, sport.sport_image);
-              // console.log(`DEBUG (Browser Console) - Raw sportImageUrl from API: ${sport.sport_image?.url}`);
-              // console.log(`DEBUG (Browser Console) - Constructed fullSportImageUrl: ${fullSportImageUrl}`);
               return (
                 <Link key={sport.id} href={`/sports/${sport.slug}`} className="group block text-center bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md hover:shadow-xl dark:border dark:border-slate-700 transition-all duration-300 hover:-translate-y-1">
                   {fullSportImageUrl ? (
@@ -55,8 +53,8 @@ export default async function HomePage() {
                         src={fullSportImageUrl} 
                         alt={sport.sport_image?.alternativeText || sport.name}
                         className="w-full h-full object-cover"
-                        width={96} // Default width, can be overridden by actual image width if available
-                        height={96} // Default height
+                        width={96}
+                        height={96}
                       />
                     </div>
                   ) : (
@@ -72,11 +70,11 @@ export default async function HomePage() {
             })}
           </div>
         ) : (
-          <p className="text-slate-600 dark:text-slate-400 text-center">No sports found yet.</p>
+          <p className="text-slate-600 dark:text-slate-400 text-center">No esports titles found yet.</p>
         )}
       </section>
 
-      {/* --- Browse by Category Section --- */}
+      {/* --- Browse by Category Section (Shows all categories for now) --- */}
       <section className="w-full mb-16">
         <h2 className="text-3xl font-bold mb-8 text-center text-slate-800 dark:text-slate-200">Browse by Category</h2>
         {categoriesFromStrapi.length > 0 ? (
@@ -96,12 +94,12 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* --- Latest Articles Section --- */}
-      <section className="w-full mt-16"> {/* Changed mb-16 to mt-16 for consistency */}
-        <h2 className="text-3xl font-bold mb-8 text-center text-slate-800 dark:text-slate-200">Latest Articles</h2>
-        {articles.length > 0 ? (
+      {/* --- Latest Esports Articles Section --- */}
+      <section className="w-full mt-16">
+        <h2 className="text-3xl font-bold mb-8 text-center text-slate-800 dark:text-slate-200">Latest Esports Articles</h2>
+        {esportsArticles.length > 0 ? (
           <div className="flex flex-col gap-12 max-w-5xl mx-auto">
-            {articles.map((article) => {
+            {esportsArticles.map((article) => {
                const fullArticleCoverUrl = getStrapiImageUrl(article.cover_image);
               return (
                 <article key={article.id} className="group bg-white dark:bg-slate-800 rounded-lg shadow-lg hover:shadow-xl dark:border dark:border-slate-700 transition-shadow duration-300 ease-in-out flex flex-col md:flex-row overflow-hidden">
@@ -111,7 +109,7 @@ export default async function HomePage() {
                         <img 
                           src={fullArticleCoverUrl} 
                           alt={article.cover_image?.alternativeText || article.title || ''}
-                          className="w-100 h-75 object-cover"
+                          className="w-full h-full object-cover" // Ensure image covers the area
                         />
                       </Link>
                     </div>
@@ -125,7 +123,7 @@ export default async function HomePage() {
                     <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
                       Published: {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString() : 'Date not available'}
                     </p>
-                    <p className="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow">
+                    <p className="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow line-clamp-3">
                       {article.excerpt}
                     </p>
                     <div className="mt-auto pt-4">
@@ -139,7 +137,7 @@ export default async function HomePage() {
             })}
           </div>
         ) : (
-          <p className="text-slate-600 dark:text-slate-400 text-center">No recent articles found.</p>
+          <p className="text-slate-600 dark:text-slate-400 text-center">No recent esports articles found.</p>
         )}
       </section>
     </main>

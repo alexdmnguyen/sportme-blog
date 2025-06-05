@@ -38,6 +38,9 @@ export default function RootLayout({
                 <Link href="/articles" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
                   All Articles
                 </Link>
+                <Link href="/esports" className="text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary-hover px-3 py-2 rounded-md text-sm font-medium">
+                  Esports Hub
+                </Link>
                 {/* <ThemeSwitcher /> */}
               </div>
             </nav>
