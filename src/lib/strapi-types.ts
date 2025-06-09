@@ -26,7 +26,7 @@ export interface DirectStrapiMediaObject {
     small?: StrapiMediaFormat;
     medium?: StrapiMediaFormat;
     large?: StrapiMediaFormat;
-    [key: string]: StrapiMediaFormat | undefined; // other custom formats
+    [key: string]: StrapiMediaFormat | undefined;
   };
   ext?: string;
   mime?: string;
@@ -41,6 +41,7 @@ export interface StrapiRelatedItem {
   slug: string;
   description?: string;
   sport_image?: DirectStrapiMediaObject | null;
+  categories?: Array<{ id: number; name: string; slug: string; }>;
   // category_image?: DirectStrapiMediaObject | null;
 }
 
@@ -80,8 +81,6 @@ export interface StrapiArticle {
   ai_assisted?: boolean;
   cover_image?: DirectStrapiMediaObject | null;
   
-  // When an article is fetched and its relations are populated,
-  // the related sport/category data appears directly as an object or array of objects.
   sport?: StrapiRelatedItem | null;
   categories?: StrapiRelatedItem[];
 }

@@ -109,7 +109,7 @@ export default async function EsportsHomePage() {
                         <img 
                           src={fullArticleCoverUrl} 
                           alt={article.cover_image?.alternativeText || article.title || ''}
-                          className="w-full h-full object-cover" // Ensure image covers the area
+                          className="w-full h-full object-cover"
                         />
                       </Link>
                     </div>

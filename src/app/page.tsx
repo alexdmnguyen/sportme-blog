@@ -26,18 +26,13 @@ export default async function HomePage() {
     <main className="container mx-auto px-4 py-8 sm:px-6 lg:py-12">
       
       {/* --- Hero/Welcome Section --- */}
-      <section className="text-center mb-16">
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-4 text-slate-900 dark:text-slate-100 tracking-tight">Welcome to SAMBO SENTRAL!</h1>
+      <section className="text-center mb-12">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-4 text-slate-900 dark:text-slate-100 tracking-tight">Welcome to SAMBO SENTRAL!</h1>
         <p className="max-w-2xl mx-auto text-lg text-slate-600 dark:text-slate-400">Your one-stop source for the latest news, rumors, and predictions.</p>
-        <div className="mt-8">
-          <Link href="/articles" className="inline-block bg-indigo-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors shadow-md hover:shadow-lg">
-            View All Articles
-          </Link>
-        </div>
       </section>
       
       {/* --- Explore Sports Section --- */}
-      <section className="w-full mb-16">
+      <section className="w-full mb-16 ">
         <h2 className="text-3xl font-bold mb-8 text-center text-slate-800 dark:text-slate-200">Explore Sports</h2>
         {sportsFromStrapi.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -77,7 +72,7 @@ export default async function HomePage() {
       </section>
 
       {/* --- Browse by Category Section --- */}
-      <section className="w-full mb-16">
+      {/* <section className="w-full mb-16">
         <h2 className="text-3xl font-bold mb-8 text-center text-slate-800 dark:text-slate-200">Browse by Category</h2>
         {categoriesFromStrapi.length > 0 ? (
           <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
@@ -94,7 +89,7 @@ export default async function HomePage() {
         ) : (
           <p className="text-slate-600 dark:text-slate-400 text-center">No categories found yet.</p>
         )}
-      </section>
+      </section> */}
 
       {/* --- Latest Articles Section --- */}
       <section className="w-full mt-16"> {/* Changed mb-16 to mt-16 for consistency */}
@@ -142,6 +137,11 @@ export default async function HomePage() {
           <p className="text-slate-600 dark:text-slate-400 text-center">No recent articles found.</p>
         )}
       </section>
+      <div className="mt-8 text-center p-6">
+        <Link href="/articles" className="inline-block bg-indigo-600 text-white font-semibold py-3 px-15 rounded-lg hover:bg-indigo-700 transition-colors shadow-md hover:shadow-lg">
+          View All Articles
+        </Link>
+      </div>
     </main>
   );
 }

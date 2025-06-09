@@ -133,7 +133,7 @@ export async function getLatestArticles(limit: number = 5, options?: { is_esport
   if (typeof options?.is_esport === 'boolean') {
     urlParams.filters = { 
       sport: { // Filter by the 'sport' relation
-        is_esport: { $eq: options.is_esport } // Target the 'is_esport' field of the related sport
+        is_esport: { $eq: options.is_esport }
       }
     };
   }
@@ -149,9 +149,9 @@ export async function getLatestArticles(limit: number = 5, options?: { is_esport
 
 export async function getAllArticles(page: number = 1, pageSize: number = 25): Promise<{ articles: StrapiArticleListItem[], pagination: any | null }> {
   const urlParams = {
-    fields: ['title', 'slug', 'excerpt', 'publishedAt'], // Core article attributes for list items
+    fields: ['title', 'slug', 'excerpt', 'publishedAt'],
     populate: {
-      cover_image: { fields: ['url', 'alternativeText', 'width', 'height'] } // In case you want to add images to this list later
+      cover_image: { fields: ['url', 'alternativeText', 'width', 'height'] }
     },
     sort: { publishedAt: 'desc' },
     pagination: { page, pageSize, withCount: true },
@@ -173,12 +173,12 @@ export async function getArticleBySlug(slug: string): Promise<StrapiArticle | nu
       sport: { 
         populate: { sport_image: { fields: ['name', 'alternativeText', 'url', 'width', 'height', 'formats'] } }
       },
-      categories: { fields: ['name', 'slug'] } // Assuming categories are simpler
+      categories: { fields: ['name', 'slug'] }
     }
   };
   try {
     const response = await fetchStrapiAPI("/articles", urlParams);
-    const articles = normalizeStrapiResponse(response); // This gives an array
+    const articles = normalizeStrapiResponse(response);
     return articles && articles.length > 0 ? articles[0] : null;
   } catch (error) {
     console.error(`getArticleBySlug for ${slug} failed:`, error);
@@ -193,7 +193,9 @@ export async function getArticlesBySportSlug(sportSlug: string): Promise<{ sport
   try {
     const sportResponse = await fetchStrapiAPI("/sports", {
       filters: { slug: { $eq: sportSlug } },
-      populate: { sport_image: { fields: ['name', 'alternativeText', 'url', 'width', 'height', 'formats'] } }
+      populate: { sport_image: { 
+        fields: ['name', 'alternativeText', 'url', 'width', 'height', 'formats'] }, 
+        categories: { fields: ['name', 'slug'] } }
     });
     const sports = normalizeStrapiResponse(sportResponse);
     if (sports && sports.length > 0) {
@@ -243,4 +245,80 @@ export async function getArticlesByCategorySlug(categorySlug: string): Promise<{
     console.error(`getArticlesByCategorySlug for ${categorySlug} failed:`, error);
   }
   return { category, articles };
+}
+
+export async function getArticlesBySportAndCategory(
+  sportSlug: string, 
+  categorySlug: string
+): Promise<StrapiArticleListItem[]> { // Assuming it returns a list of articles
+  const urlParams = {
+    filters: {
+      $and: [
+        {
+          sport: {
+            slug: { $eq: sportSlug },
+          },
+        },
+        {
+          categories: {
+            slug: { $eq: categorySlug },
+          },
+        },
+      ],
+    },
+    populate: {
+      cover_image: { fields: ['url', 'alternativeText', 'width', 'height'] },
+      sport: { fields: ['name', 'slug'] },
+      categories: { fields: ['name', 'slug'] }
+    },
+    sort: { publishedAt: 'desc' },
+  };
+  
+  try {
+    const response = await fetchStrapiAPI("/articles", urlParams);
+    return normalizeStrapiResponse(response) || [];
+  } catch (error) {
+    console.error(`getArticlesBySportAndCategory for ${sportSlug}/${categorySlug} failed:`, error);
+    return [];
+  }
+}
+
+export async function getSportAndCategoryPageData(
+  sportSlug: string, 
+  categorySlug: string
+): Promise<{ sport: StrapiRelatedItem | null, articles: StrapiArticleListItem[] }> {
+  let sport: StrapiRelatedItem | null = null;
+  let articles: StrapiArticleListItem[] = [];
+
+  try {
+    const sportResponse = await fetchStrapiAPI("/sports", {
+      filters: { slug: { $eq: sportSlug } },
+      populate: { 
+        sport_image: { fields: ['name', 'alternativeText', 'url', 'width', 'height'] },
+        categories: { fields: ['id', 'name', 'slug'] } // Populate all categories for this sport
+      }
+    });
+    const sports = normalizeStrapiResponse(sportResponse);
+    if (sports && sports.length > 0) {
+      sport = sports[0];
+
+      // If the sport exists, fetch only the articles that match BOTH the sport and category
+      const articlesResponse = await fetchStrapiAPI("/articles", {
+        filters: { 
+          $and: [
+            { sport: { slug: { $eq: sportSlug } } },
+            { categories: { slug: { $eq: categorySlug } } }
+          ]
+        },
+        populate: {
+          cover_image: { fields: ['url', 'alternativeText', 'width', 'height'] },
+        },
+        sort: { publishedAt: 'desc' }
+      });
+      articles = normalizeStrapiResponse(articlesResponse) || [];
+    }
+  } catch (error) {
+    console.error(`getSportAndCategoryPageData for ${sportSlug}/${categorySlug} failed:`, error);
+  }
+  return { sport, articles };
 }
