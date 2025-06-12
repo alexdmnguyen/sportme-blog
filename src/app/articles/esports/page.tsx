@@ -1,21 +1,21 @@
-// All Articles Page
+// All eSports Articles Page
 
 import Link from 'next/link';
 import Image from 'next/image';
 import { getAllArticles, getStrapiImageUrl } from '@/lib/strapi-client';
 import { StrapiArticleListItem } from '@/lib/strapi-types';
 
-export const revalidate = 60; // Revalidate this page every 60 seconds
+export const revalidate = 60;
 
-export default async function ArticlesPage({ searchParams }: { searchParams?: { page?: string } }) {
+export default async function EsportsArticlesPage({ searchParams }: { searchParams?: { page?: string } }) {
   const currentPage = Number(searchParams?.page) || 1;
-  const pageSize = 27; // Display 9 articles per page (3x3 grid)
+  const pageSize = 9;
   
-  const { articles, pagination } = await getAllArticles(currentPage, pageSize);
+  const { articles, pagination } = await getAllArticles(currentPage, pageSize, { is_esport: true });
 
   return (
     <main className="container mx-auto px-4 py-8 sm:px-6 lg:py-12">
-      <h1 className="text-4xl sm:text-5xl font-extrabold mb-10 sm:mb-14 text-center text-slate-900 dark:text-slate-100">All Articles</h1>
+      <h1 className="text-4xl sm:text-5xl font-extrabold mb-10 sm:mb-14 text-center text-slate-900 dark:text-slate-100">All eSports Articles</h1>
       
       {articles.length > 0 ? (
         <>
@@ -55,13 +55,9 @@ export default async function ArticlesPage({ searchParams }: { searchParams?: { 
                     {!article.excerpt && <div className="flex-grow min-h-[3em]"></div>}
                     
                     <div className="mt-auto pt-2">
-                      {article.slug ? (
                         <Link href={`/articles/${article.slug}`} className="inline-block text-indigo-600 dark:text-indigo-400 font-semibold hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors">
                             Read more &rarr;
                         </Link>
-                      ) : (
-                        <p className="text-sm text-red-500">Article slug missing, cannot link.</p>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -72,7 +68,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams?: { 
           {pagination && pagination.pageCount > 1 && (
             <div className="mt-12 flex flex-col sm:flex-row justify-center items-center gap-4">
               {currentPage > 1 && (
-                <Link href={`/articles?page=${currentPage - 1}`} className="w-full sm:w-auto text-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
+                <Link href={`/articles/esports?page=${currentPage - 1}`} className="w-full sm:w-auto text-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
                   &larr; Previous
                 </Link>
               )}
@@ -80,7 +76,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams?: { 
                 Page {currentPage} of {pagination.pageCount}
               </span>
               {currentPage < pagination.pageCount && (
-                <Link href={`/articles?page=${currentPage + 1}`} className="w-full sm:w-auto text-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
+                <Link href={`/articles/esports?page=${currentPage + 1}`} className="w-full sm:w-auto text-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
                   Next &rarr;
                 </Link>
               )}
@@ -88,7 +84,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams?: { 
           )}
         </>
       ) : (
-        <p className="text-center text-slate-600 dark:text-slate-400 text-xl py-10">No articles found. Check back later!</p>
+        <p className="text-center text-slate-600 dark:text-slate-400 text-xl py-10">No eSports articles found. Check back later!</p>
       )}
     </main>
   );

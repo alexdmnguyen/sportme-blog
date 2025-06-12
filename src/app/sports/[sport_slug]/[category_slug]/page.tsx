@@ -18,7 +18,6 @@ interface SportCategoryPageProps {
 
 // --- METADATA FUNCTION ---
 export async function generateMetadata({ params }: SportCategoryPageProps): Promise<Metadata> {
-  // A simple title based on URL slugs.
   const sportName = params.sport_slug.charAt(0).toUpperCase() + params.sport_slug.slice(1);
   const categoryName = params.category_slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   return {
@@ -44,8 +43,8 @@ export default async function SportCategoryPage({ params }: SportCategoryPagePro
 
   return (
     <main> 
-      {/* --- Full-Width Hero/Cover Section (Re-used from sport page) --- */}
-      <section className="relative w-full h-58 md:h-64 lg:h-70 bg-slate-800 text-white overflow-hidden">
+      {/* --- Full-Width Hero/Cover Section --- */}
+      <section className="relative w-full h-100 md:h-64 lg:h-70 bg-slate-800 text-white overflow-hidden">
         {fullSportImageUrl ? (
           <img 
             src={fullSportImageUrl} 
@@ -67,17 +66,15 @@ export default async function SportCategoryPage({ params }: SportCategoryPagePro
       </section>
       
       {/* --- Category Sub-Navigation --- */}
-      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 -mt-28 mb-15">
-        <div className="rounded-lg p-5 flex flex-wrap justify-center items-center gap-10">
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 lg:-mt-28 -mt-42 mb-15">
+        <div className="rounded-lg p-2 flex flex-wrap justify-center items-center gap-5">
           {sport.categories && sport.categories.length > 0 ? (
             sport.categories.map(category => {
-              // Check if the current category's slug matches the slug from the URL
               const isActive = params.category_slug === category.slug;
               return (
                 <Link 
                   key={category.id}
                   href={`/sports/${sport.slug}/${category.slug}`} 
-                  // Conditionally apply active styles
                   className={`
                     px-8 py-3 rounded-full font-medium transition-colors text-sm
                     ${isActive 
@@ -104,7 +101,6 @@ export default async function SportCategoryPage({ params }: SportCategoryPagePro
               const fullArticleCoverUrl = getStrapiImageUrl(article.cover_image);
               return (
                 <div key={article.id} className="bg-white dark:bg-slate-800 rounded-lg shadow-xl hover:shadow-2xl dark:border dark:border-slate-700 transition-all duration-300 ease-in-out flex flex-col overflow-hidden transform hover:-translate-y-1">
-                  {/* Text Content First */}
                   <div className="p-6 flex flex-col flex-grow">
                     <h2 className="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">
                       <Link href={`/articles/${article.slug}`} className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
@@ -132,7 +128,6 @@ export default async function SportCategoryPage({ params }: SportCategoryPagePro
                       )}
                     </div>
                   </div>
-                  {/* Image Last */}
                   {fullArticleCoverUrl && (
                      <Link href={`/articles/${article.slug}`} className="block relative aspect-video overflow-hidden">
                       <img 

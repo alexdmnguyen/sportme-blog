@@ -1,13 +1,12 @@
 // Single Article Pages
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import type { Metadata, ResolvingMetadata } from 'next';
 import { getArticleBySlug, getStrapiImageUrl } from '@/lib/strapi-client';
 import { 
-  StrapiArticle, 
-  StrapiRelatedItem,
-  DirectStrapiMediaObject
+  StrapiArticle
 } from '@/lib/strapi-types';
 
 function renderRichTextBlock(block: any, index: number) {
@@ -35,14 +34,12 @@ function renderRichTextBlock(block: any, index: number) {
   }
 }
 
-// --- PROPS INTERFACE ---
 interface SingleArticlePageProps {
   params: {
     slug: string;
   };
 }
 
-// --- METADATA FUNCTION ---
 export async function generateMetadata(
   { params }: SingleArticlePageProps,
   parent: ResolvingMetadata
@@ -65,8 +62,7 @@ export async function generateMetadata(
   };
 }
 
-// --- PAGE COMPONENT ---
-export const revalidate = 60; // Revalidate this page every 60 seconds
+export const revalidate = 60;
 
 export default async function SingleArticlePage({ params }: SingleArticlePageProps) {
   const article: StrapiArticle | null = await getArticleBySlug(params.slug);
@@ -80,10 +76,18 @@ export default async function SingleArticlePage({ params }: SingleArticlePagePro
   const sportData = article.sport; 
   const categoriesData = article.categories;
 
+  let backLinkHref = "/articles/sports";
+  let backLinkText = "Back to All Sports Articles";
+
+  if (sportData?.is_esport) {
+    backLinkHref = "/articles/esports";
+    backLinkText = "Back to All eSports Articles";
+  }
+
   return (
-    <main className="container mx-auto px-4 py-8 sm:px-6 lg:py-12">
-      <article className="max-w-3xl mx-auto bg-white dark:bg-slate-800 shadow-xl rounded-lg p-6 sm:p-8 lg:p-10">
-        {/* Display Sport and Categories */}
+    <main className="container mx-auto px-4 py-2 sm:px-6 lg:py-2">
+      <article className="max-w-3xl mx-auto bg-white dark:bg-slate-800 shadow-xl rounded-lg p-5 sm:p-8 lg:p-10">
+        
         <div className="mb-6 flex flex-wrap items-center text-sm gap-x-4 gap-y-2">
           {sportData && sportData.slug && (
             <Link href={`/sports/${sportData.slug}`} className="font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-slate-700 px-3 py-1 rounded-full">
@@ -96,7 +100,7 @@ export default async function SingleArticlePage({ params }: SingleArticlePagePro
                 category.slug && (
                   <Link
                     key={category.id}
-                    href={`/categories/${category.slug}`}
+                    href={`/sports/${sportData.slug}/${category.slug}`} 
                     className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 text-xs font-medium"
                   >
                     {category.name}
@@ -116,13 +120,14 @@ export default async function SingleArticlePage({ params }: SingleArticlePagePro
         )}
 
         {fullCoverImageUrl && (
-          <div className="mb-8 overflow-hidden rounded-lg shadow-md">
-            <img
+          <div className="relative mb-8 w-full overflow-hidden rounded-lg shadow-md aspect-video">
+            <Image
               src={fullCoverImageUrl}
               alt={article.cover_image?.alternativeText || article.title || 'Article cover image'}
-              className="w-full h-100 object-cover"
-              width={article.cover_image?.width || 800}
-              height={article.cover_image?.height || 450}
+              className="object-cover"
+              fill
+              sizes="(max-width: 896px) 90vw, 896px"
+              priority
             />
           </div>
         )}
@@ -140,8 +145,8 @@ export default async function SingleArticlePage({ params }: SingleArticlePagePro
         </div>
 
         <div className="mt-12 pt-6 border-t border-slate-200 dark:border-slate-700">
-          <Link href="/articles" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline">
-            &larr; Back to All Articles
+          <Link href={backLinkHref} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline">
+            &larr; {backLinkText}
           </Link>
         </div>
       </article>

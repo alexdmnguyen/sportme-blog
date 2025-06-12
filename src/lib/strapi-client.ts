@@ -64,7 +64,6 @@ async function fetchStrapiAPI(
 function normalizeStrapiResponse(apiResponse: any): any | null {
   if (!apiResponse) return null;
 
-  // If apiResponse has a 'data' property, process it
   if (apiResponse.hasOwnProperty('data')) {
     const data = apiResponse.data;
     if (!data) return null;
@@ -132,7 +131,7 @@ export async function getLatestArticles(limit: number = 5, options?: { is_esport
   
   if (typeof options?.is_esport === 'boolean') {
     urlParams.filters = { 
-      sport: { // Filter by the 'sport' relation
+      sport: { 
         is_esport: { $eq: options.is_esport }
       }
     };
@@ -147,7 +146,16 @@ export async function getLatestArticles(limit: number = 5, options?: { is_esport
   }
 }
 
-export async function getAllArticles(page: number = 1, pageSize: number = 25): Promise<{ articles: StrapiArticleListItem[], pagination: any | null }> {
+interface ArticleFilters {
+  is_esport?: boolean;
+}
+
+export async function getAllArticles(
+  page: number = 1, 
+  pageSize: number = 25, 
+  filters?: ArticleFilters
+): Promise<{ articles: StrapiArticleListItem[], pagination: any | null }> {
+  
   const urlParams = {
     fields: ['title', 'slug', 'excerpt', 'publishedAt'],
     populate: {
@@ -155,7 +163,17 @@ export async function getAllArticles(page: number = 1, pageSize: number = 25): P
     },
     sort: { publishedAt: 'desc' },
     pagination: { page, pageSize, withCount: true },
+    ...(filters && filters.is_esport !== undefined && {
+      filters: {
+        sport: {
+          is_esport: {
+            $eq: filters.is_esport
+          }
+        }
+      }
+    })
   };
+
   try {
     const response = await fetchStrapiAPI("/articles", urlParams);
     return { articles: normalizeStrapiResponse(response) || [], pagination: response.meta?.pagination || null };
@@ -225,7 +243,6 @@ export async function getArticlesByCategorySlug(categorySlug: string): Promise<{
     const categoryResponse = await fetchStrapiAPI("/categories", {
       filters: { slug: { $eq: categorySlug } },
       fields: ['name', 'slug', 'description']
-      // populate: { category_image: { fields: [...] } } 
     });
     const categories = normalizeStrapiResponse(categoryResponse);
     if (categories && categories.length > 0) {
@@ -235,7 +252,7 @@ export async function getArticlesByCategorySlug(categorySlug: string): Promise<{
         filters: { categories: { slug: { $eq: categorySlug } } },
         populate: {
           cover_image: { fields: ['url', 'alternativeText', 'width', 'height'] },
-          sport: { fields: ['name', 'slug'] } // Basic sport info for cards
+          sport: { fields: ['name', 'slug'] }
         },
         sort: { publishedAt: 'desc' }
       });
@@ -250,7 +267,7 @@ export async function getArticlesByCategorySlug(categorySlug: string): Promise<{
 export async function getArticlesBySportAndCategory(
   sportSlug: string, 
   categorySlug: string
-): Promise<StrapiArticleListItem[]> { // Assuming it returns a list of articles
+): Promise<StrapiArticleListItem[]> {
   const urlParams = {
     filters: {
       $and: [
@@ -295,14 +312,13 @@ export async function getSportAndCategoryPageData(
       filters: { slug: { $eq: sportSlug } },
       populate: { 
         sport_image: { fields: ['name', 'alternativeText', 'url', 'width', 'height'] },
-        categories: { fields: ['id', 'name', 'slug'] } // Populate all categories for this sport
+        categories: { fields: ['id', 'name', 'slug'] }
       }
     });
     const sports = normalizeStrapiResponse(sportResponse);
     if (sports && sports.length > 0) {
       sport = sports[0];
 
-      // If the sport exists, fetch only the articles that match BOTH the sport and category
       const articlesResponse = await fetchStrapiAPI("/articles", {
         filters: { 
           $and: [

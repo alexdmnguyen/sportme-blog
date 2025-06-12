@@ -49,14 +49,14 @@ export default async function SportPage({ params }: SportPageProps) {
   return (
     <main>
       {/* --- Full-Width Hero/Cover Section --- */}
-      <section className="relative w-full h-58 md:h-64 lg:h-70 bg-slate-800 text-white overflow-hidden">
+      <section className="relative w-full h-100 md:h-64 lg:h-70 bg-slate-800 text-white overflow-hidden">
         {fullSportImageUrl ? (
           <img 
             src={fullSportImageUrl} 
             alt={sport.sport_image?.alternativeText || sport.name}
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-in-out hover:scale-110" 
-            width={sport.sport_image?.width} // Optional: for layout stability
-            height={sport.sport_image?.height} // Optional: for layout stability
+            width={sport.sport_image?.width}
+            height={sport.sport_image?.height}
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900 to-slate-700"></div>
@@ -70,15 +70,14 @@ export default async function SportPage({ params }: SportPageProps) {
         </div>
       </section>
       
-      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 -mt-28 mb-15">
-        <div className="rounded-lg p-5 flex flex-wrap justify-center items-center gap-10">
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 lg:-mt-28 -mt-42 mb-15">
+        <div className="rounded-lg p-2 flex flex-wrap justify-center items-center gap-5">
           {sport.categories && sport.categories.length > 0 ? (
             sport.categories.map(category => (
               <Link 
                 key={category.id}
-                // --- THIS IS THE CORRECTED LINK SYNTAX ---
                 href={`/sports/${sport.slug}/${category.slug}`} 
-                className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-8 py-3 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 font-medium transition-colors text-sm"
+                className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-5 lg:px-8 py-3 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 font-medium transition-colors text-sm"
               >
                 {category.name}
               </Link>
@@ -92,7 +91,7 @@ export default async function SportPage({ params }: SportPageProps) {
       {/* --- Articles List Section (with container for standard width) --- */}
       <div className="relative z-10 container mx-auto px-4 py-8 sm:px-6 lg:px-8 mt-[-4rem] sm:mt-[-5rem] mb-12">
         {articles.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto"> {/* Max 2 columns, centered */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {articles.map((article) => {
               const fullArticleCoverUrl = getStrapiImageUrl(article.cover_image);
               // const categoryInfo = article.categories?.[0];
