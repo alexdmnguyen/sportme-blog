@@ -83,7 +83,7 @@ export default async function HomePage() {
                       </div>
                     ) : (
                       <div className="w-24 h-24 mx-auto mb-3 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
-                        <span className="text-3xl font-bold text-slate-500">{sport.name.charAt(0)}</span>
+                        <span className="text-3xl font-bold text-slate-500">{sport.name ? sport.name.charAt(0) : '?'}</span>
                       </div>
                     )}
                     <span className="text-lg font-semibold text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
