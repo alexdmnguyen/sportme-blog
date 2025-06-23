@@ -12,9 +12,13 @@ import {
 // --- HELPER FUNCTIONS ---
 
 export function getStrapiImageUrl(mediaObject?: DirectStrapiMediaObject | null): string | null {
-  const strapiBaseUrl = process.env.NEXT_PUBLIC_STRAPI_BASE_URL || 'http://localhost:1337';
+  const strapiBaseUrl = process.env.NEXT_PUBLIC_STRAPI_BASE_URL;
+  if (!strapiBaseUrl) {
+    console.error("NEXT_PUBLIC_STRAPI_BASE_URL environment variable is not set.");
+    return null;
+  }
+
   const imageUrlFromAPI = mediaObject?.url;
-  
   if (imageUrlFromAPI) {
     return imageUrlFromAPI.startsWith('http') || imageUrlFromAPI.startsWith('//')
       ? imageUrlFromAPI
@@ -28,17 +32,26 @@ async function fetchStrapiAPI(
   urlParamsObject: Record<string, unknown> = {}, 
   options: RequestInit = {}
 ) {
-  const strapiApiUrl = process.env.NEXT_PUBLIC_STRAPI_API_URL || 'http://localhost:1337/api';
+  const strapiApiUrl = process.env.NEXT_PUBLIC_STRAPI_API_URL;
   const strapiToken = process.env.NEXT_PUBLIC_STRAPI_TOKEN;
+
+  if (!strapiApiUrl) {
+    console.error("NEXT_PUBLIC_STRAPI_API_URL environment variable is not set. Cannot fetch data.");
+    throw new Error("API URL is not configured. Please set NEXT_PUBLIC_STRAPI_API_URL.");
+  }
+
   try {
     const defaultOptions: RequestInit = {
       headers: { 'Content-Type': 'application/json', ...(strapiToken && { 'Authorization': `Bearer ${strapiToken}` }) },
-      cache: 'no-store', ...options,
+      cache: 'force-cache', 
+      ...options,
     };
     const queryString = qs.stringify(urlParamsObject, { encodeValuesOnly: true });
     const requestUrl = `${strapiApiUrl}${path}${queryString ? `?${queryString}` : ''}`;
+
     const response = await fetch(requestUrl, defaultOptions);
     const responseText = await response.text();
+    
     if (!response.ok) {
       console.error("Strapi API Error:", response.status, responseText);
       throw new Error(`Failed to fetch from Strapi: ${response.status} ${response.statusText} - ${responseText}`);
