@@ -1,17 +1,17 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  
   images: {
     remotePatterns: [
       // For local development
       { protocol: 'http', hostname: 'localhost', port: '1337', pathname: '/uploads/**' },
-      // For production on Render
+      // For your live production backend
       { protocol: 'https', hostname: 'lockey-news-backend.onrender.com', pathname: '/uploads/**' }
     ],
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

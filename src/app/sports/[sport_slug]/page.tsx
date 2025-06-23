@@ -79,7 +79,7 @@ export default async function SportPage({ params }: { params: { sport_slug: stri
       </div>
 
       {/* --- Articles List Section (with container for standard width) --- */}
-      <div className="relative z-10 container mx-auto px-4 py-8 sm:px-6 lg:px-8 mt-[-4rem] sm:mt-[-5rem] mb-12">
+      <div className="relative z-10 container mx-auto px-4 py-8 sm:px-6 lg:px-8 mt-[-4rem] sm:mt-[-0.5rem] mb-12">
         {articles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {articles.map((article) => {
