@@ -17,6 +17,11 @@ export const revalidate = 60;
 
 // --- HOMEPAGE COMPONENT ---
 export default async function HomePage() {
+  console.log("--- VERCEL RUNTIME CHECK ---");
+  console.log("STRAPI URL (from env):", process.env.NEXT_PUBLIC_STRAPI_URL);
+  console.log("STRAPI TOKEN (from env):", process.env.NEXT_PUBLIC_STRAPI_TOKEN ? "Token Found and is not empty" : "Token NOT FOUND or is EMPTY");
+  console.log("----------------------------");
+
   const sportsFromStrapi: StrapiSportListItem[] = await getSportsFromStrapi({ is_esport: false });
   const articles: StrapiArticleListItem[] = await getLatestArticles(8, { is_esport: false });
 
