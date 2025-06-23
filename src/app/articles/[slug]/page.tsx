@@ -72,9 +72,11 @@ function renderRichTextBlock(block: RichTextBlock, index: number) {
 }
 
 export async function generateMetadata(
-  { params }: { params: { slug: string } }
+  props: { params: { slug: string } }
 ): Promise<Metadata> {
-  const article: StrapiArticle | null = await getArticleBySlug(params.slug);
+  const slug = props.params.slug;
+  const article: StrapiArticle | null = await getArticleBySlug(slug);
+  
   if (!article) {
     return { title: 'Article Not Found' };
   }
@@ -95,9 +97,10 @@ export async function generateMetadata(
 export const revalidate = 60;
 
 export default async function SingleArticlePage(
-  { params }: { params: { slug: string } }
+  props: { params: { slug: string } }
 ) {
-  const article: StrapiArticle | null = await getArticleBySlug(params.slug);
+  const slug = props.params.slug;
+  const article: StrapiArticle | null = await getArticleBySlug(slug);
 
   if (!article) {
     notFound();
