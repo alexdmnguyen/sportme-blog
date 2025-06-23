@@ -3,14 +3,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { getAllArticles, getStrapiImageUrl } from '@/lib/strapi-client';
-import { StrapiArticleListItem } from '@/lib/strapi-types';
 
 export const revalidate = 60; // Revalidate this page every 60 seconds
 
-export default async function ArticlesPage({ searchParams }: { searchParams?: { page?: string } }) {
-  const currentPage = Number(searchParams?.page) || 1;
-  const pageSize = 27; // Display 9 articles per page (3x3 grid)
-  
+export default async function ArticlesPage(props: { searchParams?: { page?: string } }) {
+  const currentPage = Number(props.searchParams?.page) || 1;
+  const pageSize = 27;
+
   const { articles, pagination } = await getAllArticles(currentPage, pageSize);
 
   return (

@@ -1,27 +1,18 @@
 // Single Sport Pages
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import type { Metadata, ResolvingMetadata } from 'next';
+import type { Metadata } from 'next';
 import { getArticlesBySportSlug, getStrapiImageUrl } from '@/lib/strapi-client';
 import { 
-  StrapiSportPageData,
-  StrapiArticleListItem,
-  StrapiRelatedItem,
-  DirectStrapiMediaObject
+  StrapiSportPageData
 } from '@/lib/strapi-types';
 
-// --- PROPS INTERFACE ---
-interface SportPageProps {
-  params: {
-    sport_slug: string;
-  };
-}
 
 // --- METADATA FUNCTION ---
 export async function generateMetadata(
-  { params }: SportPageProps,
-  parent: ResolvingMetadata
+  { params }: { params: { sport_slug: string } }
 ): Promise<Metadata> {
   const { sport } = await getArticlesBySportSlug(params.sport_slug);
   if (!sport) {
@@ -30,14 +21,13 @@ export async function generateMetadata(
   return {
     title: `${sport.name} Articles | SamboBlog`,
     description: sport.description || `Latest articles and news about ${sport.name}.`,
-    // openGraph: { images: [getStrapiImageUrl(sport.sport_image) || ''] }
   };
 }
 
 // --- PAGE COMPONENT ---
-export const revalidate = 60; // Revalidate this page every 60 seconds
+export const revalidate = 60; 
 
-export default async function SportPage({ params }: SportPageProps) {
+export default async function SportPage({ params }: { params: { sport_slug: string } }) {
   const { sport, articles }: StrapiSportPageData = await getArticlesBySportSlug(params.sport_slug);
 
   if (!sport) {
@@ -51,12 +41,12 @@ export default async function SportPage({ params }: SportPageProps) {
       {/* --- Full-Width Hero/Cover Section --- */}
       <section className="relative w-full h-100 md:h-64 lg:h-70 bg-slate-800 text-white overflow-hidden">
         {fullSportImageUrl ? (
-          <img 
+          <Image 
             src={fullSportImageUrl} 
             alt={sport.sport_image?.alternativeText || sport.name}
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-in-out hover:scale-110" 
-            width={sport.sport_image?.width}
-            height={sport.sport_image?.height}
+            fill
+            priority
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900 to-slate-700"></div>
@@ -94,27 +84,15 @@ export default async function SportPage({ params }: SportPageProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {articles.map((article) => {
               const fullArticleCoverUrl = getStrapiImageUrl(article.cover_image);
-              // const categoryInfo = article.categories?.[0];
 
               return (
                 <div key={article.id} className="bg-white dark:bg-slate-800 rounded-lg shadow-xl hover:shadow-2xl dark:border dark:border-slate-700 transition-all duration-300 ease-in-out flex flex-col overflow-hidden transform hover:-translate-y-1">
-                  {/* Text Content First */}
                   <div className="p-6 flex flex-col flex-grow">
                     <h2 className="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">
                       <Link href={`/articles/${article.slug}`} className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                         {article.title || 'Untitled Article'}
                       </Link>
                     </h2>
-                     {/* Display Categories if available 
-                     {article.categories && article.categories.length > 0 && (
-                       <div className="flex flex-wrap gap-2 mb-2">
-                         {article.categories.map(cat => (
-                           <Link key={cat.id} href={`/categories/${cat.slug}`} className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600">
-                             {cat.name}
-                           </Link>
-                         ))}
-                       </div>
-                     )}*/}
                     {article.publishedAt && (
                       <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
                         Published: {new Date(article.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -127,22 +105,19 @@ export default async function SportPage({ params }: SportPageProps) {
                     )}
                     {!article.excerpt && <div className="flex-grow min-h-[3em]"></div>}
                     <div className="mt-auto pt-2">
-                      {article.slug ? (
                         <Link href={`/articles/${article.slug}`} className="inline-block text-indigo-600 dark:text-indigo-400 font-semibold hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors">
                             Read more &rarr;
                         </Link>
-                      ) : (
-                        <p className="text-sm text-red-500">Article slug missing.</p>
-                      )}
                     </div>
                   </div>
-                  {/* Image Last */}
                   {fullArticleCoverUrl && (
-                     <Link href={`/articles/${article.slug}`} className="block relative aspect-video overflow-hidden"> {/* aspect-video maintains 16:9 */}
-                      <img 
+                     <Link href={`/articles/${article.slug}`} className="block relative aspect-video overflow-hidden">
+                      <Image 
                         src={fullArticleCoverUrl} 
                         alt={article.cover_image?.alternativeText || article.title || ''}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
                       />
                     </Link>
                   )}
@@ -160,11 +135,3 @@ export default async function SportPage({ params }: SportPageProps) {
     </main>
   );
 }
-
-// Optional: For pre-rendering paths at build time
-// export async function generateStaticParams() {
-//   const sports = await getSportsFromStrapi(); // Assuming getSportsFromStrapi exists in strapi-client
-//   return sports.map((sport) => ({
-//     sport_slug: sport.slug,
-//   }));
-// }

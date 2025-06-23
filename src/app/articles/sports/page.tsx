@@ -3,12 +3,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { getAllArticles, getStrapiImageUrl } from '@/lib/strapi-client';
-import { StrapiArticleListItem } from '@/lib/strapi-types';
 
 export const revalidate = 60;
 
-export default async function SportsArticlesPage({ searchParams }: { searchParams?: { page?: string } }) {
-  const currentPage = Number(searchParams?.page) || 1;
+export default async function SportsArticlesPage(props: { searchParams?: { page?: string } }) {
+  const currentPage = Number(props.searchParams?.page) || 1;
   const pageSize = 9;
   
   const { articles, pagination } = await getAllArticles(currentPage, pageSize, { is_esport: false });

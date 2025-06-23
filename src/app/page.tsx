@@ -4,7 +4,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { 
   getSportsFromStrapi, 
-  getCategoriesFromStrapi, 
   getLatestArticles, 
   getStrapiImageUrl 
 } from '@/lib/strapi-client';
@@ -62,7 +61,7 @@ export default async function HomePage() {
         <section className="w-full mb-12 lg:mb-16">
           <h2 className="text-3xl font-bold mb-8 text-center text-slate-800 dark:text-slate-200">Explore Sports</h2>
           {sportsFromStrapi.length > 0 ? (
-            <div className="grid sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               {sportsFromStrapi.map((sport) => {
                 const fullSportImageUrl = getStrapiImageUrl(sport.sport_image);
                 return (
@@ -114,7 +113,7 @@ export default async function HomePage() {
             </aside>
 
             {articles.length > 0 ? (
-              <div className="flex flex-col gap-12 max-w-5xl">
+              <div className="flex flex-col gap-12 max-w-5xl w-full">
                 {articles.map((article) => {
                   const fullArticleCoverUrl = getStrapiImageUrl(article.cover_image);
                   return (

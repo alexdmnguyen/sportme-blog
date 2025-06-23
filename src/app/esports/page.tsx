@@ -4,13 +4,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   getSportsFromStrapi,
-  getCategoriesFromStrapi,
   getLatestArticles,
   getStrapiImageUrl
 } from '@/lib/strapi-client';
 import {
   StrapiSportListItem,
-  StrapiCategoryListItem,
   StrapiArticleListItem
 } from '@/lib/strapi-types';
 
@@ -19,7 +17,6 @@ export const revalidate = 60;
 // --- ESPORTS HOMEPAGE COMPONENT ---
 export default async function EsportsHomePage() {
   const esportsSports: StrapiSportListItem[] = await getSportsFromStrapi({ is_esport: true });
-  const categoriesFromStrapi: StrapiCategoryListItem[] = await getCategoriesFromStrapi();
   const esportsArticles: StrapiArticleListItem[] = await getLatestArticles(5, { is_esport: true });
 
   const videoUrl = "https://videos.pexels.com/video-files/7849228/7849228-uhd_2732_1440_25fps.mp4";
@@ -41,7 +38,7 @@ export default async function EsportsHomePage() {
 
         <div className="relative h-full flex flex-col justify-center items-center text-center p-4">
           <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight drop-shadow-lg">
-            Welcome to SAMBO'S ESPORTS!
+            Welcome to SAMBO&apos;S ESPORTS!
           </h1>
           <p className="mt-4 text-base sm:text-xl max-w-2xl text-slate-200 drop-shadow-md">
             Your central source for all things esports: news, tournaments, and analysis.
@@ -94,26 +91,7 @@ export default async function EsportsHomePage() {
             <p className="text-slate-600 dark:text-slate-400 text-center">No esports titles found yet.</p>
           )}
         </section>
-
-        {/* --- Browse by Category Section --- */}
-        {/* <section className="w-full mb-12 lg:mb-16">
-          <h2 className="text-3xl font-bold mb-8 text-center text-slate-800 dark:text-slate-200">Browse by Category</h2>
-          {categoriesFromStrapi.length > 0 ? (
-            <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
-              {categoriesFromStrapi.map((category) => (
-                <Link
-                  key={category.id}
-                  href={`/categories/${category.slug}`}
-                  className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 px-5 py-2 rounded-full text-sm sm:text-md font-medium transition-colors"
-                >
-                  {category.name}
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <p className="text-slate-600 dark:text-slate-400 text-center">No categories found yet.</p>
-          )}
-        </section> */}
+        
 
         {/* --- Latest Esports Articles Section --- */}
         <section className="w-full mt-12 lg:mt-16">
@@ -135,7 +113,7 @@ export default async function EsportsHomePage() {
             </aside>
 
             {esportsArticles.length > 0 ? (
-              <div className="flex flex-col gap-12 w-5xl max-w-5xl">
+              <div className="flex flex-col gap-12 w-full max-w-5xl">
                 {esportsArticles.map((article) => {
                   const fullArticleCoverUrl = getStrapiImageUrl(article.cover_image);
                   return (

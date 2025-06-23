@@ -1,23 +1,12 @@
 // Sport/Category Pages
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getSportAndCategoryPageData, getStrapiImageUrl } from '@/lib/strapi-client';
-import { 
-  StrapiArticleListItem,
-  StrapiRelatedItem
-} from '@/lib/strapi-types';
-
-// --- PROPS INTERFACE ---
-interface SportCategoryPageProps {
-  params: {
-    sport_slug: string;
-    category_slug: string;
-  };
-}
 
 // --- METADATA FUNCTION ---
-export async function generateMetadata({ params }: SportCategoryPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: { sport_slug: string; category_slug: string; } }): Promise<Metadata> {
   const sportName = params.sport_slug.charAt(0).toUpperCase() + params.sport_slug.slice(1);
   const categoryName = params.category_slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   return {
@@ -29,7 +18,7 @@ export async function generateMetadata({ params }: SportCategoryPageProps): Prom
 // --- PAGE COMPONENT ---
 export const revalidate = 60; 
 
-export default async function SportCategoryPage({ params }: SportCategoryPageProps) {
+export default async function SportCategoryPage({ params }: { params: { sport_slug: string; category_slug: string; } }) {
   const { sport, articles } = await getSportAndCategoryPageData(
     params.sport_slug,
     params.category_slug
@@ -46,12 +35,12 @@ export default async function SportCategoryPage({ params }: SportCategoryPagePro
       {/* --- Full-Width Hero/Cover Section --- */}
       <section className="relative w-full h-100 md:h-64 lg:h-70 bg-slate-800 text-white overflow-hidden">
         {fullSportImageUrl ? (
-          <img 
+          <Image 
             src={fullSportImageUrl} 
             alt={sport.sport_image?.alternativeText || sport.name}
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-in-out hover:scale-110" 
-            width={sport.sport_image?.width}
-            height={sport.sport_image?.height}
+            fill
+            priority
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900 to-slate-700"></div>
@@ -119,21 +108,19 @@ export default async function SportCategoryPage({ params }: SportCategoryPagePro
                     )}
                     {!article.excerpt && <div className="flex-grow min-h-[3em]"></div>}
                     <div className="mt-auto pt-2">
-                      {article.slug ? (
                         <Link href={`/articles/${article.slug}`} className="inline-block text-indigo-600 dark:text-indigo-400 font-semibold hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors">
                             Read more &rarr;
                         </Link>
-                      ) : (
-                        <p className="text-sm text-red-500">Article slug missing.</p>
-                      )}
                     </div>
                   </div>
                   {fullArticleCoverUrl && (
                      <Link href={`/articles/${article.slug}`} className="block relative aspect-video overflow-hidden">
-                      <img 
+                      <Image 
                         src={fullArticleCoverUrl} 
                         alt={article.cover_image?.alternativeText || article.title || ''}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
                       />
                     </Link>
                   )}

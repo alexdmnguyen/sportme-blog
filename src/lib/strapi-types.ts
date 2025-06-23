@@ -12,6 +12,13 @@ export interface StrapiMediaFormat {
   sizeInBytes?: number;
 }
 
+export interface StrapiPagination {
+  page: number;
+  pageSize: number;
+  pageCount: number;
+  total: number;
+}
+
 // Represents a populated media object (cover_image, sport_image)
 export interface DirectStrapiMediaObject {
   id: number;
@@ -42,7 +49,7 @@ export interface StrapiRelatedItem {
   description?: string;
   sport_image?: DirectStrapiMediaObject | null;
   categories?: Array<{ id: number; name: string; slug: string; }>;
-  // category_image?: DirectStrapiMediaObject | null;
+  category_image?: DirectStrapiMediaObject | null;
 }
 
 
