@@ -29,26 +29,46 @@ interface RichTextBlock {
 function renderRichTextBlock(block: RichTextBlock, index: number) {
   switch (block.type) {
     case 'paragraph':
-      return <p key={index} className="mb-4 leading-relaxed">{block.children.map((child, i) => <span key={i}>{(child as TextBlock).text}</span>)}</p>;
-    case 'heading':
-      const Tag = `h${block.level || 2}` as keyof JSX.IntrinsicElements;
-      return <Tag key={index} className={`font-bold mt-6 mb-3 ${block.level === 1 ? 'text-3xl' : block.level === 2 ? 'text-2xl' : 'text-xl'}`}>{block.children.map((child, i) => <span key={i}>{(child as TextBlock).text}</span>)}</Tag>;
-    case 'list':
+    case 'quote':
+    case 'heading': {
+      const textChildren = block.children as TextBlock[];
+      const content = textChildren.map((child, i) => (
+        <span key={i}>{child.text}</span>
+      ));
+
+      if (block.type === 'paragraph') {
+        return <p key={index} className="mb-4 leading-relaxed">{content}</p>;
+      }
+      if (block.type === 'quote') {
+        return <blockquote key={index} className="border-l-4 border-slate-300 dark:border-slate-600 pl-4 italic my-4 text-slate-600 dark:text-slate-400">{content}</blockquote>;
+      }
+      if (block.type === 'heading') {
+        const Tag = `h${block.level || 2}` as keyof JSX.IntrinsicElements;
+        return <Tag key={index} className={`font-bold mt-6 mb-3 ${block.level === 1 ? 'text-3xl' : block.level === 2 ? 'text-2xl' : 'text-xl'}`}>{content}</Tag>;
+      }
+      break;
+    }
+
+    case 'list': {
+      const listChildren = block.children as ListItem[];
       const ListTag = block.format === 'ordered' ? 'ol' : 'ul';
       return (
         <ListTag key={index} className={`ml-6 mb-4 ${block.format === 'ordered' ? 'list-decimal' : 'list-disc'}`}>
-          {block.children.map((listItem, listItemIndex: number) => (
+          {listChildren.map((listItem, listItemIndex: number) => (
             <li key={listItemIndex}>
-              {(listItem as ListItem).children.map((child, textIndex: number) => <span key={textIndex}>{child.text}</span>)}
+              {listItem.children.map((child, textIndex: number) => (
+                <span key={textIndex}>{child.text}</span>
+              ))}
             </li>
           ))}
         </ListTag>
       );
-    case 'quote':
-        return <blockquote key={index} className="border-l-4 border-slate-300 dark:border-slate-600 pl-4 italic my-4 text-slate-600 dark:text-slate-400">{block.children.map((child, i) => <span key={i}>{(child as TextBlock).text}</span>)}</blockquote>;
+    }
+
     default:
       return <p key={index} className="my-2 p-2 bg-red-100 text-red-700 border border-red-300 rounded">Unsupported content block: {block.type}</p>;
   }
+  return null;
 }
 
 export async function generateMetadata(

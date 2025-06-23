@@ -50,6 +50,7 @@ export interface StrapiRelatedItem {
   sport_image?: DirectStrapiMediaObject | null;
   categories?: Array<{ id: number; name: string; slug: string; }>;
   category_image?: DirectStrapiMediaObject | null;
+  is_esport?: boolean;
 }
 
 
